@@ -468,8 +468,14 @@ export class SceneComponent implements OnInit, OnDestroy {
 
         // Notify body styling that model is loaded
         document.body.classList.add('gltf-loaded');
+        window.dispatchEvent(new CustomEvent('gltf-loaded'));
       },
-      undefined,
+      (xhr) => {
+        if (xhr.lengthComputable) {
+          const percent = Math.round((xhr.loaded / xhr.total) * 100);
+          window.dispatchEvent(new CustomEvent('gltf-progress', { detail: { progress: percent } }));
+        }
+      },
       (err) => console.error('Error loading blue-suit-man GLB model:', err)
     );
   }

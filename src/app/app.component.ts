@@ -1,5 +1,5 @@
 import {
-  Component, HostListener, OnInit, AfterViewInit, OnDestroy
+  Component, HostListener, OnInit, AfterViewInit, OnDestroy, ViewChild, ElementRef
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NavComponent } from './components/nav/nav.component';
@@ -24,6 +24,63 @@ import { gsap } from 'gsap';
     EducationComponent, ContactComponent, ChatbotComponent, SceneComponent
   ],
   template: `
+    <!-- Interactive Cyberpunk Recruiter Bypass Loader Overlay -->
+    <div class="cyber-loader" *ngIf="!isLoaded" [class.fade-out]="isFadingOut" [class.glitching]="isGlitching">
+      <div class="loader-bg-grid"></div>
+      <div class="loader-scanline"></div>
+      
+      <div class="terminal-container">
+        <!-- Terminal Header -->
+        <div class="term-header">
+          <div class="term-dots">
+            <span class="term-dot red"></span>
+            <span class="term-dot yellow"></span>
+            <span class="term-dot green"></span>
+          </div>
+          <span class="term-title">SHIVAM_OS_TERMINAL - v4.1.0</span>
+          <span class="term-status">RECRUITER_SESSION</span>
+        </div>
+
+        <!-- Terminal Body -->
+        <div class="term-body" #termBody>
+          <div class="log-stream">
+            <div class="log-line" *ngFor="let log of logList" [innerHTML]="log"></div>
+          </div>
+
+          <!-- Hacker Type Stream -->
+          <div class="hacker-stream" *ngIf="hackerLines.length > 0">
+            <div class="hack-line" *ngFor="let line of hackerLines">>>> {{ line }}</div>
+          </div>
+
+          <!-- Blinking prompt -->
+          <div class="log-line prompt" *ngIf="showPrompt">
+            <span class="cursor-prefix">root&#64;shivam_os:~$</span>
+            <span class="blinking-cursor">█</span>
+          </div>
+
+          <!-- Warning Box & Bypass CTA -->
+          <div class="locked-alert" *ngIf="showBypass" [class.glitch-flash]="isGlitching">
+            <div class="alert-box">
+              <span class="alert-icon">⚠️</span>
+              <div class="alert-msg">
+                <span class="red-glow">FIREWALL SYSTEM ENGAGED</span>
+                <span class="micro-info">TYPE ANY KEYS ON KEYBOARD TO HACK OR INITIATE MANUAL BYPASS</span>
+              </div>
+            </div>
+            
+            <button 
+              class="bypass-btn" 
+              (click)="onBypassClick()" 
+              (mouseenter)="playSynthSound('hover')"
+              #bypassBtn>
+              <span class="btn-glitch-bg"></span>
+              <span class="btn-text">INITIATE SECURITY BYPASS</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <app-scene></app-scene>
     <!-- Global background orbs for Apple glassmorphic look -->
     <div class="global-orb orb-1" aria-hidden="true"></div>
@@ -248,6 +305,227 @@ import { gsap } from 'gsap';
   `]
 })
 export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
+  progress = 0;
+  isLoaded = false;
+  isFadingOut = false;
+  isGlitching = false;
+  showPrompt = false;
+  showBypass = false;
+  gltfLoaded = false;
+
+  logList: string[] = [];
+  rawLogs = [
+    'SYS_BOOT: MOUNTING SYSTEM PARTITION & READING CONFIGS...',
+    'DIAGNOSTICS: MEMORY UNIT STATUS [4+ YEARS EXP]... <span class="green-glow">OK</span>',
+    'DIAGNOSTICS: CORE DEVELOPER CPU [16 THREADS]... <span class="green-glow">OK</span>',
+    'NET_EST: TUNNELING SSH PROTOCOL ON SECURE PORT 63053...',
+    'ASSET_ING: FETCHING BlueSuitMan.glb 3D AVATAR MESH...',
+    'GPU_INIT: COMPILING CUSTOM COMPOSITE WEBGL SHADERS...',
+    'SYSTEM: ACTIVE RECRUITER CHANNEL DETECTED.'
+  ];
+
+  hackerLines: string[] = [];
+  hackerCodeTemplates = [
+    '#include <shivam_portfolio.h>',
+    'void executeRecruiterBypass() {',
+    '  System::Kernel::LockOverride(true);',
+    '  Network::PortSecure::TunnelSsh(63053);',
+    '  std::cout << "[SUCCESS] FIREWALL DECRYPTED..." << std::endl;',
+    '}',
+    '#define BYPASS_KEY 0xFA4C9B27',
+    'int decryptHandshake() {',
+    '  auto cipher = MatrixCode::ScanlineRain();',
+    '  return cipher.decrypt(BYPASS_KEY);',
+    '}'
+  ];
+  hackerTemplateIndex = 0;
+  
+  private logTimeout: any;
+
+  @ViewChild('termBody') termBody!: ElementRef<HTMLDivElement>;
+
+  ngOnInit() {
+    document.body.classList.add('js-loaded');
+    this.startLoaderSimulation();
+
+    this.scrollService.activePage$.subscribe(page => {
+      if (page !== this.activePage) {
+        this.goToPage(page);
+      }
+    });
+  }
+
+  playSynthSound(type: 'hover' | 'click' | 'keypress' | 'glitch') {
+    try {
+      const AudioCtx = (window.AudioContext || (window as any).webkitAudioContext);
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      
+      if (type === 'hover') {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.04, ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.08);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.08);
+      } else if (type === 'keypress') {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(250 + Math.random() * 180, ctx.currentTime);
+        gain.gain.setValueAtTime(0.02, ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.05);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.05);
+      } else if (type === 'click') {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(150, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.6);
+        gain.gain.setValueAtTime(0.08, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.65);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.65);
+      } else if (type === 'glitch') {
+        const bufferSize = ctx.sampleRate * 0.25;
+        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = Math.random() * 2 - 1;
+        }
+        const noise = ctx.createBufferSource();
+        noise.buffer = buffer;
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.value = 1000;
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0.05, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+        noise.start();
+      }
+    } catch (e) {}
+  }
+
+  scrollToBottom() {
+    setTimeout(() => {
+      try {
+        if (this.termBody) {
+          this.termBody.nativeElement.scrollTop = this.termBody.nativeElement.scrollHeight;
+        }
+      } catch (err) {}
+    }, 50);
+  }
+
+  startLoaderSimulation() {
+    let logIdx = 0;
+    const printLog = () => {
+      if (logIdx < this.rawLogs.length) {
+        this.logList.push(this.rawLogs[logIdx]);
+        this.playSynthSound('keypress');
+        this.progress = Math.round((logIdx / this.rawLogs.length) * 90);
+        this.scrollToBottom();
+        logIdx++;
+        this.logTimeout = setTimeout(printLog, 250 + Math.random() * 150);
+      } else {
+        this.showPrompt = true;
+        this.logTimeout = setTimeout(() => {
+          this.showBypass = true;
+          this.playSynthSound('hover');
+          this.scrollToBottom();
+        }, 300);
+      }
+    };
+    this.logTimeout = setTimeout(printLog, 150);
+  }
+
+  completeLogsInstantly() {
+    if (this.logTimeout) {
+      clearTimeout(this.logTimeout);
+    }
+    this.logList = [...this.rawLogs];
+    this.showPrompt = true;
+    this.showBypass = true;
+    this.progress = 90;
+    this.playSynthSound('click');
+    this.scrollToBottom();
+  }
+
+  @HostListener('window:keydown', ['$event'])
+  onLoaderKeyDown(e: KeyboardEvent) {
+    if (this.isLoaded) return;
+
+    // Prevent default scroll behaviors
+    if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      e.preventDefault();
+    }
+
+    // Skip logs compilation instantly on first key hit
+    if (!this.showBypass) {
+      this.completeLogsInstantly();
+      return;
+    }
+
+    // Capture standard letters to print code snippets
+    if (e.key.length === 1) {
+      this.playSynthSound('keypress');
+      if (this.hackerTemplateIndex < this.hackerCodeTemplates.length) {
+        this.hackerLines.push(this.hackerCodeTemplates[this.hackerTemplateIndex]);
+        this.hackerTemplateIndex++;
+        this.progress = 90 + Math.round((this.hackerTemplateIndex / this.hackerCodeTemplates.length) * 7);
+        this.scrollToBottom();
+      } else {
+        this.onBypassClick();
+      }
+    }
+  }
+
+  @HostListener('window:gltf-loaded')
+  onGltfLoaded() {
+    this.gltfLoaded = true;
+  }
+
+  onBypassClick() {
+    if (this.isGlitching) return;
+    this.isGlitching = true;
+    this.playSynthSound('click');
+    
+    setTimeout(() => this.playSynthSound('glitch'), 150);
+    setTimeout(() => this.playSynthSound('glitch'), 350);
+
+    const checkGltfReady = () => {
+      if (this.gltfLoaded) {
+        this.progress = 100;
+        this.scrollToBottom();
+        setTimeout(() => {
+          this.isFadingOut = true;
+          setTimeout(() => {
+            this.isLoaded = true;
+          }, 850);
+        }, 400);
+      } else {
+        if (!this.logList.includes('<span class="red-glow">>>> WAITING FOR 3D ASSET ENGINE PIPELINE...</span>')) {
+          this.logList.push('<span class="red-glow">>>> WAITING FOR 3D ASSET ENGINE PIPELINE...</span>');
+          this.scrollToBottom();
+        }
+        setTimeout(checkGltfReady, 250);
+      }
+    };
+    checkGltfReady();
+  }
+
   activePage = 0;
   isTransitioning = false;
   pages = [
@@ -343,14 +621,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  ngOnInit() {
-    document.body.classList.add('js-loaded');
-    this.scrollService.activePage$.subscribe(page => {
-      if (page !== this.activePage) {
-        this.goToPage(page);
-      }
-    });
-  }
+
 
   ngAfterViewInit() {
     window.addEventListener('wheel', this.onWheel, { passive: false });
