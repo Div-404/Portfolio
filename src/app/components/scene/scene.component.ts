@@ -108,6 +108,7 @@ export class SceneComponent implements OnInit, OnDestroy {
 
   private frameId = 0;
   scrollY = 0;
+  isGlitchShaking = false;
   private targetScrollY = 0;
   private maxScroll = 1;
 
@@ -751,11 +752,20 @@ export class SceneComponent implements OnInit, OnDestroy {
     if (this.avatarModel) {
       const lerpFactor = 0.1; // Smooth organic transition tracking (go with the flow)
 
-      this.avatarModel.position.x += (target.x - this.avatarModel.position.x) * lerpFactor;
+      let jitterX = 0;
+      let jitterY = 0;
+      let jitterZ = 0;
+      if (this.isGlitchShaking) {
+        jitterX = (Math.random() - 0.5) * 0.18;
+        jitterY = (Math.random() - 0.5) * 0.18;
+        jitterZ = (Math.random() - 0.5) * 0.12;
+      }
+
+      this.avatarModel.position.x += (target.x + jitterX - this.avatarModel.position.x) * lerpFactor;
       // Gentle breathing overlay added on Y
       const breathing = Math.sin(t * 1.2) * 0.01;
-      this.avatarModel.position.y += (target.y + breathing - this.avatarModel.position.y) * lerpFactor;
-      this.avatarModel.position.z += (target.z - this.avatarModel.position.z) * lerpFactor;
+      this.avatarModel.position.y += (target.y + breathing + jitterY - this.avatarModel.position.y) * lerpFactor;
+      this.avatarModel.position.z += (target.z + jitterZ - this.avatarModel.position.z) * lerpFactor;
 
       // Update debug overlays
       this.avatarX = target.x;
@@ -806,7 +816,8 @@ export class SceneComponent implements OnInit, OnDestroy {
               const shader = mat.userData['shader'];
               shader.uniforms['uTime'].value = t;
               const currentDisp = shader.uniforms['uDisplacementStrength'].value;
-              shader.uniforms['uDisplacementStrength'].value = currentDisp + (target.displacement - currentDisp) * lerpFactor;
+              const targetDisp = this.isGlitchShaking ? (0.6 + Math.random() * 0.7) : target.displacement;
+              shader.uniforms['uDisplacementStrength'].value = currentDisp + (targetDisp - currentDisp) * lerpFactor;
             }
           });
         }
@@ -878,6 +889,14 @@ export class SceneComponent implements OnInit, OnDestroy {
   private getElementTop(el: HTMLElement | null, fallbackTop: number): number {
     if (!el) return fallbackTop;
     return el.getBoundingClientRect().top + window.scrollY;
+  }
+
+  @HostListener('window:avatar-shake')
+  onAvatarShake() {
+    this.isGlitchShaking = true;
+    setTimeout(() => {
+      this.isGlitchShaking = false;
+    }, 2500);
   }
 
   ngOnDestroy() {

@@ -522,6 +522,19 @@ export class SkillsComponent implements AfterViewInit, OnDestroy {
     this.renderer.render(this.scene, this.camera);
   };
 
+  @HostListener('window:skills-boom')
+  onSkillsBoom() {
+    this.spheres.forEach((s) => {
+      const pos = s.group.position;
+      const dir = pos.clone().normalize();
+      if (pos.length() < 0.1) {
+        dir.set((Math.random() - 0.5), (Math.random() - 0.5), 0).normalize();
+      }
+      const speed = 2.6 + Math.random() * 1.6;
+      s.velocity.copy(dir).multiplyScalar(speed);
+    });
+  }
+
   ngOnDestroy() {
     cancelAnimationFrame(this.frameId);
     this.renderer?.dispose();

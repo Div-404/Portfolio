@@ -13,6 +13,7 @@ import { ContactComponent } from './components/contact/contact.component';
 import { ChatbotComponent } from './components/chatbot/chatbot.component';
 import { SceneComponent } from './components/scene/scene.component';
 import { ScrollService } from './services/scroll.service';
+import { MazeComponent } from './components/maze/maze.component';
 import { gsap } from 'gsap';
 
 @Component({
@@ -21,15 +22,19 @@ import { gsap } from 'gsap';
   imports: [
     CommonModule, NavComponent, HeroComponent, AboutComponent,
     ProjectsComponent, SkillsComponent, ExperienceComponent,
-    EducationComponent, ContactComponent, ChatbotComponent, SceneComponent
+    EducationComponent, ContactComponent, ChatbotComponent, SceneComponent,
+    MazeComponent
   ],
   template: `
     <!-- Interactive Cyberpunk Recruiter Bypass Loader Overlay -->
     <div class="cyber-loader" *ngIf="!isLoaded" [class.fade-out]="isFadingOut" [class.glitching]="isGlitching">
-      <div class="loader-bg-grid"></div>
-      <div class="loader-scanline"></div>
+      <div class="loader-bg-grid" *ngIf="gameMode === 'none'"></div>
+      <div class="loader-scanline" *ngIf="gameMode === 'none'"></div>
+
+      <!-- Maze Game Component -->
+      <app-maze *ngIf="gameMode === 'maze'" (exit)="exitGameToPortfolio()"></app-maze>
       
-      <div class="terminal-container">
+      <div class="terminal-container" *ngIf="gameMode === 'none'">
         <!-- Terminal Header -->
         <div class="term-header">
           <div class="term-dots">
@@ -53,13 +58,13 @@ import { gsap } from 'gsap';
           </div>
 
           <!-- Blinking prompt -->
-          <div class="log-line prompt" *ngIf="showPrompt">
+          <div class="log-line prompt" *ngIf="showPrompt && !showGameChoice">
             <span class="cursor-prefix">root&#64;shivam_os:~$</span>
             <span class="blinking-cursor">█</span>
           </div>
 
           <!-- Warning Box & Bypass CTA -->
-          <div class="locked-alert" *ngIf="showBypass" [class.glitch-flash]="isGlitching">
+          <div class="locked-alert" *ngIf="showBypass && !showGameChoice" [class.glitch-flash]="isGlitching">
             <div class="alert-box">
               <span class="alert-icon">⚠️</span>
               <div class="alert-msg">
@@ -77,7 +82,54 @@ import { gsap } from 'gsap';
               <span class="btn-text">INITIATE SECURITY BYPASS</span>
             </button>
           </div>
+
+          <!-- Choice box inside Terminal Body -->
+          <div class="locked-alert choice-panel" *ngIf="showGameChoice" style="border-top: 1px dashed rgba(0, 245, 170, 0.25); animation: alertFadeIn 0.5s ease-out forwards; width: 100%;">
+            <div class="alert-box choice-box" style="background: rgba(0, 245, 170, 0.06); border-color: rgba(0, 245, 170, 0.3);">
+              <span class="alert-icon">⚡</span>
+              <div class="alert-msg">
+                <span class="red-glow" style="color: #00f5aa; text-shadow: 0 0 8px rgba(0, 245, 170, 0.4);">OVERRIDE SUCCESSFUL</span>
+                <span class="micro-info" style="color: rgba(255, 255, 255, 0.5);">Systems decrypted. Select initialization routine:</span>
+              </div>
+            </div>
+            
+            <div class="choice-actions" style="display: flex; gap: 1rem; width: 100%; margin-top: 0.5rem;">
+              <button 
+                class="bypass-btn play-btn" 
+                (click)="startMaze()"
+                (mouseenter)="playSynthSound('hover')"
+                style="flex: 1;">
+                PLAY MAZE PROTOCOL
+              </button>
+              <button 
+                class="bypass-btn skip-btn" 
+                (click)="exitGameToPortfolio()"
+                (mouseenter)="playSynthSound('hover')"
+                style="flex: 1; border-color: var(--pink); color: var(--pink); box-shadow: 0 0 15px rgba(236, 72, 153, 0.15);">
+                DIRECT PORTFOLIO
+              </button>
+            </div>
+          </div>
         </div>
+      </div>
+    </div>
+
+    <!-- Dev Console Slide-Down Drawer -->
+    <div class="dev-console" [class.open]="isConsoleOpen">
+      <div class="console-header">
+        <span class="console-title">> SHIVAM_OS_CONSOLE</span>
+        <span class="console-hint">(Press \` to toggle)</span>
+      </div>
+      <div class="console-output" #consoleOutput>
+        <div class="console-line" *ngFor="let line of consoleLogs" [innerHTML]="line"></div>
+      </div>
+      <div class="console-input-row">
+        <span class="console-prompt">shivam_os#</span>
+        <input 
+          type="text" 
+          class="console-input" 
+          (keydown.enter)="executeConsoleCommand(consoleInputEl.value); consoleInputEl.value = ''" 
+          #consoleInputEl>
       </div>
     </div>
 
@@ -344,6 +396,16 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
   @ViewChild('termBody') termBody!: ElementRef<HTMLDivElement>;
 
+  // Dev Console Properties
+  isConsoleOpen = false;
+  consoleInputVal = '';
+  consoleLogs: string[] = [
+    'System DevConsole active. Type "help" for a list of control overrides.'
+  ];
+
+  @ViewChild('consoleOutput') consoleOutput!: ElementRef<HTMLDivElement>;
+  @ViewChild('consoleInputEl') consoleInputEl!: ElementRef<HTMLInputElement>;
+
   ngOnInit() {
     document.body.classList.add('js-loaded');
     this.startLoaderSimulation();
@@ -353,6 +415,52 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         this.goToPage(page);
       }
     });
+
+    // Bind F12 browser console globals
+    (window as any).hire = () => {
+      this.goToPage(6);
+      console.log('%c[SYSTEM] Navigating to contact form page...', 'color: #00d4ff; font-weight: bold;');
+      return 'Bypassing coordinates to Contact Form...';
+    };
+    (window as any).skills = () => {
+      this.goToPage(2);
+      console.log('%c[SYSTEM] Navigating to Skills section...', 'color: #00d4ff; font-weight: bold;');
+      return 'Bypassing coordinates to Skills Area...';
+    };
+    (window as any).theme = () => {
+      const themeBtn = document.querySelector('.theme-toggle-btn') as HTMLButtonElement;
+      if (themeBtn) themeBtn.click();
+      return 'Toggled environment lights!';
+    };
+    (window as any).skillsBoom = () => {
+      window.dispatchEvent(new CustomEvent('skills-boom'));
+      return 'Skills physics spheres exploded!';
+    };
+    (window as any).avatarShake = () => {
+      window.dispatchEvent(new CustomEvent('avatar-shake'));
+      return 'Avatar holographic shader glitched!';
+    };
+
+    console.log(
+      `%c
+   ____  _     _                 
+  / ___|| |__ (_)_   ____ _ _ __ ___  
+  \\___ \\| '_ \\| \\ \\ / / _\` | '_ \` _ \\ 
+   ___) | | | | |\\ V / (_| | | | | | |
+  |____/|_| |_|_| \\_/ \\__,_|_| |_| |_|
+                                      
+  🔥 Welcome Developer Recruiter! 🔥
+  Inspecting Shivam's code? You've found the control panel!
+  Try running these JS commands directly in this console:
+    > hire()
+    > skills()
+    > theme()
+    > skillsBoom()
+    > avatarShake()
+  Or press the backtick/tilde (\`) key on the page to open the in-game developer terminal!
+  `,
+      'color: #ec4899; font-weight: bold; font-family: monospace; line-height: 1.4;'
+    );
   }
 
   playSynthSound(type: 'hover' | 'click' | 'keypress' | 'glitch') {
@@ -463,14 +571,94 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     this.scrollToBottom();
   }
 
+  toggleConsole() {
+    this.isConsoleOpen = !this.isConsoleOpen;
+    this.playSynthSound('click');
+    if (this.isConsoleOpen) {
+      setTimeout(() => {
+        if (this.consoleInputEl) {
+          this.consoleInputEl.nativeElement.focus();
+        }
+      }, 100);
+    }
+  }
+
+  executeConsoleCommand(cmd: string) {
+    const trimmed = cmd.trim().toLowerCase();
+    if (!trimmed) return;
+
+    this.consoleLogs.push(`<span class="prompt-line">shivam_os# ${cmd}</span>`);
+    this.playSynthSound('keypress');
+
+    switch (trimmed) {
+      case 'help':
+        this.consoleLogs.push(
+          'Available commands:',
+          '  <span class="cyan-glow">skills-boom</span>   - Triggers a physics explosion in the skills sphere cloud.',
+          '  <span class="cyan-glow">avatar-shake</span>  - Spikes the shader displacement on the 3D model.',
+          '  <span class="cyan-glow">theme-swap</span>   - Toggles Day/Night mode colors and lighting.',
+          '  <span class="cyan-glow">contact</span>      - Navigates directly to the contact page.',
+          '  <span class="cyan-glow">clear</span>         - Clears the console screen.'
+        );
+        break;
+      case 'skills-boom':
+        this.consoleLogs.push('<span class="green-glow">Executing Skills Boom Protocol... Particle velocity vectors spiked!</span>');
+        window.dispatchEvent(new CustomEvent('skills-boom'));
+        this.playSynthSound('glitch');
+        break;
+      case 'avatar-shake':
+        this.consoleLogs.push('<span class="green-glow">Executing Avatar Glitch Shake... Hologram displacement active!</span>');
+        window.dispatchEvent(new CustomEvent('avatar-shake'));
+        this.playSynthSound('glitch');
+        break;
+      case 'theme-swap':
+        this.consoleLogs.push('<span class="green-glow">Toggling environment light systems...</span>');
+        const themeBtn = document.querySelector('.theme-toggle-btn') as HTMLButtonElement;
+        if (themeBtn) {
+          themeBtn.click();
+        }
+        break;
+      case 'contact':
+        this.consoleLogs.push('<span class="green-glow">Snapping camera coordinate systems to Contact Slide...</span>');
+        this.goToPage(6);
+        break;
+      case 'clear':
+        this.consoleLogs = ['Console screen cleared.'];
+        break;
+      default:
+        this.consoleLogs.push(`<span class="red-glow">Command not found: "${trimmed}". Type "help" for instructions.</span>`);
+        this.playSynthSound('glitch');
+        break;
+    }
+
+    setTimeout(() => {
+      try {
+        if (this.consoleOutput) {
+          this.consoleOutput.nativeElement.scrollTop = this.consoleOutput.nativeElement.scrollHeight;
+        }
+      } catch (err) {}
+    }, 50);
+  }
+
   @HostListener('window:keydown', ['$event'])
   onLoaderKeyDown(e: KeyboardEvent) {
-    if (this.isLoaded) return;
+    // 1. Check for DevConsole Toggle (backtick key ` or ~)
+    if (e.key === '`') {
+      e.preventDefault();
+      this.toggleConsole();
+      return;
+    }
 
-    // Prevent default scroll behaviors
-    if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+    // 2. If console is open, do not execute loader actions
+    if (this.isConsoleOpen) return;
+
+    // 3. Prevent scroll on space/arrows during loader phase
+    if (!this.isLoaded && (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
       e.preventDefault();
     }
+
+    // 4. Skip if loader is already dismissed
+    if (this.isLoaded) return;
 
     // Skip logs compilation instantly on first key hit
     if (!this.showBypass) {
@@ -497,6 +685,9 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     this.gltfLoaded = true;
   }
 
+  showGameChoice = false;
+  gameMode: 'none' | 'maze' = 'none';
+
   onBypassClick() {
     if (this.isGlitching) return;
     this.isGlitching = true;
@@ -509,12 +700,13 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       if (this.gltfLoaded) {
         this.progress = 100;
         this.scrollToBottom();
+        
+        // Show choice panel instead of fading out
         setTimeout(() => {
-          this.isFadingOut = true;
-          setTimeout(() => {
-            this.isLoaded = true;
-          }, 850);
-        }, 400);
+          this.isGlitching = false;
+          this.showGameChoice = true;
+          this.scrollToBottom();
+        }, 500);
       } else {
         if (!this.logList.includes('<span class="red-glow">>>> WAITING FOR 3D ASSET ENGINE PIPELINE...</span>')) {
           this.logList.push('<span class="red-glow">>>> WAITING FOR 3D ASSET ENGINE PIPELINE...</span>');
@@ -524,6 +716,22 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     };
     checkGltfReady();
+  }
+
+  startMaze() {
+    this.gameMode = 'maze';
+    this.playSynthSound('click');
+    setTimeout(() => this.playSynthSound('hover'), 150);
+  }
+
+  exitGameToPortfolio() {
+    this.showGameChoice = false;
+    this.gameMode = 'none';
+    
+    this.isFadingOut = true;
+    setTimeout(() => {
+      this.isLoaded = true;
+    }, 850);
   }
 
   activePage = 0;
