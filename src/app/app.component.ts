@@ -14,6 +14,7 @@ import { ChatbotComponent } from './components/chatbot/chatbot.component';
 import { SceneComponent } from './components/scene/scene.component';
 import { ScrollService } from './services/scroll.service';
 import { MazeComponent } from './components/maze/maze.component';
+import { GitStatsComponent } from './components/git-stats/git-stats.component';
 import { gsap } from 'gsap';
 
 @Component({
@@ -23,7 +24,7 @@ import { gsap } from 'gsap';
     CommonModule, NavComponent, HeroComponent, AboutComponent,
     ProjectsComponent, SkillsComponent, ExperienceComponent,
     EducationComponent, ContactComponent, ChatbotComponent, SceneComponent,
-    MazeComponent
+    MazeComponent, GitStatsComponent
   ],
   template: `
     <!-- Interactive Cyberpunk Recruiter Bypass Loader Overlay -->
@@ -153,7 +154,9 @@ import { gsap } from 'gsap';
         <app-experience class="carousel-slide" [class.active]="activePage === 4"></app-experience>
         <app-education class="carousel-slide" [class.active]="activePage === 5"></app-education>
         
-        <div id="contact-slide" class="carousel-slide" [class.active]="activePage === 6" style="display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; padding-top: 65px; box-sizing: border-box; height: 100vh; background: #000000;">
+        <app-git-stats class="carousel-slide" [class.active]="activePage === 6"></app-git-stats>
+        
+        <div id="contact-slide" class="carousel-slide" [class.active]="activePage === 7" style="display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; padding-top: 65px; box-sizing: border-box; height: 100vh; background: #000000;">
           <app-contact style="display: flex; align-items: center; justify-content: center; flex: 1; min-height: 0; overflow: hidden; width: 100%;"></app-contact>
           <!-- Premium Footer inside Contact slide -->
           <footer class="site-footer">
@@ -685,6 +688,13 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     this.gltfLoaded = true;
   }
 
+  @HostListener('window:synth-sound', ['$event'])
+  onSynthSound(e: any) {
+    if (e.detail && e.detail.sound) {
+      this.playSynthSound(e.detail.sound);
+    }
+  }
+
   showGameChoice = false;
   gameMode: 'none' | 'maze' = 'none';
 
@@ -743,6 +753,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     { name: 'Projects', id: 'projects' },
     { name: 'Experience', id: 'experience' },
     { name: 'Education', id: 'education' },
+    { name: 'Git Stats', id: 'git-stats' },
     { name: 'Contact', id: 'contact-slide' }
   ];
 
@@ -1130,7 +1141,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       const animatable = enteringSlide.querySelectorAll(
         '.section-label .char, .section-h2 .char, .hero-eyebrow .char, .hero-h1 .char, .hero-sub .word, ' +
         '.hero-actions a, .about-text p .word, .about-stats .stat, .skills-container, .project-card, .exp-item, ' +
-        '.edu-intro .word, .edu-stat, .edu-card, .contact-title .char, .terminal-window, .contact-ctas a, .contact-ctas button, .float-chip, .terminal-body p'
+        '.edu-intro .word, .edu-stat, .edu-card, .git-card, .contact-title .char, .terminal-window, .contact-ctas a, .contact-ctas button, .float-chip, .terminal-body p'
       );
       if (animatable.length > 0) {
         gsap.set(animatable, { opacity: 0, y: 20 });
@@ -1144,7 +1155,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
         const animatable = slide.querySelectorAll(
           '.section-label .char, .section-h2 .char, .hero-eyebrow .char, .hero-h1 .char, .hero-sub .word, ' +
           '.hero-actions a, .about-text p .word, .about-stats .stat, .skills-container, .project-card, .exp-item, ' +
-          '.edu-intro .word, .edu-stat, .edu-card, .contact-title .char, .terminal-window, .contact-ctas a, .contact-ctas button, .float-chip, .terminal-body p'
+          '.edu-intro .word, .edu-stat, .edu-card, .git-card, .contact-title .char, .terminal-window, .contact-ctas a, .contact-ctas button, .float-chip, .terminal-body p'
         );
         if (animatable.length > 0) {
           gsap.set(animatable, { clearProps: "opacity,transform,clipPath" });
@@ -1434,6 +1445,42 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     }
     else if (pageIndex === 6) {
+      const labelChars = activeSlide.querySelectorAll('.section-label .char');
+      const headingChars = activeSlide.querySelectorAll('.section-h2 .char');
+      const cards = activeSlide.querySelectorAll('.git-card');
+
+      if (labelChars.length > 0) {
+        tl.fromTo(labelChars, 
+          { opacity: 0, y: 10 },
+          { opacity: 1, y: 0, duration: 0.3, stagger: 0.01, ease: "power2.out" }
+        );
+      }
+      if (headingChars.length > 0) {
+        tl.fromTo(headingChars, 
+          { opacity: 0, y: 20, skewY: 2 },
+          { opacity: 1, y: 0, skewY: 0, duration: 0.45, stagger: 0.01, ease: "power3.out" },
+          "-=0.2"
+        );
+      }
+      if (cards.length > 0) {
+        tl.fromTo(cards, 
+          { opacity: 0, y: 15, scale: 0.98 },
+          { 
+            opacity: 1, 
+            y: 0, 
+            scale: 1, 
+            duration: 0.45, 
+            stagger: 0.06, 
+            ease: "power3.out",
+            onComplete: () => {
+              gsap.set(cards, { clearProps: "transform" });
+            }
+          },
+          "-=0.25"
+        );
+      }
+    }
+    else if (pageIndex === 7) {
       const titleChars = activeSlide.querySelectorAll('.contact-title .char');
       const terminal = activeSlide.querySelector('.terminal-window');
       const terminalLines = activeSlide.querySelectorAll('.terminal-body p');

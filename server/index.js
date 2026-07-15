@@ -189,15 +189,128 @@ app.post('/api/chat', async (req, res) => {
 });
 
 // ─── GitHub proxy (avoid CORS on client) ─────────────────────────────────────
+const PRIVATE_REPOS = [
+  {
+    name: "Payoflex_client_without_security",
+    description: "without security",
+    language: "TypeScript",
+    stargazers_count: 18,
+    forks_count: 4,
+    private: true,
+    html_url: "https://github.com/Div-404/Payoflex_client_without_security",
+    contributions: 15
+  },
+  {
+    name: "Payoflex_Admin",
+    description: "Payoflex management console",
+    language: "HTML",
+    stargazers_count: 5,
+    forks_count: 1,
+    private: true,
+    html_url: "https://github.com/Div-404/Payoflex_Admin",
+    contributions: 4
+  },
+  {
+    name: "CarCare",
+    description: "Admin",
+    language: "JavaScript",
+    stargazers_count: 9,
+    forks_count: 1,
+    private: true,
+    html_url: "https://github.com/Div-404/CarCare",
+    contributions: 3
+  },
+  {
+    name: "Payoflex_client",
+    description: "Let's change you from unsecure to secure",
+    language: "TypeScript",
+    stargazers_count: 7,
+    forks_count: 2,
+    private: true,
+    html_url: "https://github.com/Div-404/Payoflex_client",
+    contributions: 8
+  }
+];
+
+const FALLBACK_GITHUB_DATA = {
+  user: {
+    public_repos: 11,
+    followers: 12,
+    following: 15,
+    name: 'Shivam Kumar Divaker'
+  },
+  repos: [
+    {
+      name: "Portfolio",
+      description: "Shivam Kumar Divaker",
+      language: "TypeScript",
+      stargazers_count: 12,
+      forks_count: 3,
+      private: false,
+      html_url: "https://github.com/Div-404/Portfolio",
+      contributions: 6
+    },
+    ...PRIVATE_REPOS,
+    {
+      name: "Bachatpe_admin",
+      description: "Bachatpe admin panel client",
+      language: "HTML",
+      stargazers_count: 2,
+      forks_count: 0,
+      private: false,
+      html_url: "https://github.com/Div-404/Bachatpe_admin",
+      contributions: 1
+    },
+    {
+      name: "ng19-workshop",
+      description: "Bottom toLatest V19 features",
+      language: "TypeScript",
+      stargazers_count: 0,
+      forks_count: 0,
+      private: false,
+      html_url: "https://github.com/Div-404/ng19-workshop",
+      contributions: 2
+    }
+  ]
+};
+
 app.get('/api/github', async (req, res) => {
   try {
-    const response = await fetch('https://api.github.com/users/Div-404/repos?per_page=6&sort=updated', {
+    const reposResponse = await fetch('https://api.github.com/users/Div-404/repos?per_page=12&sort=updated', {
       headers: { 'User-Agent': 'portfolio-app' }
     });
-    const repos = await response.json();
-    res.json(repos);
+    
+    const userResponse = await fetch('https://api.github.com/users/Div-404', {
+      headers: { 'User-Agent': 'portfolio-app' }
+    });
+
+    if (!reposResponse.ok || !userResponse.ok) {
+      console.warn('GitHub API responded with error. Returning fallback data.');
+      return res.json(FALLBACK_GITHUB_DATA);
+    }
+
+    const fetchedRepos = await reposResponse.json();
+    const user = await userResponse.json();
+
+    if (!Array.isArray(fetchedRepos) || fetchedRepos.message || user.message) {
+      console.warn('GitHub rate limit reached or error payload. Returning fallback.');
+      return res.json(FALLBACK_GITHUB_DATA);
+    }
+
+    // Blend public repositories with local private repository metadata
+    const repos = [...fetchedRepos, ...PRIVATE_REPOS].sort((a, b) => {
+      const aDate = new Date(a.updated_at || Date.now());
+      const bDate = new Date(b.updated_at || Date.now());
+      return bDate.getTime() - aDate.getTime();
+    });
+
+    // Update user repos count to match profile (public + private = 11)
+    user.public_repos = 11;
+
+    res.json({ user, repos });
   } catch (err) {
-    res.status(500).json({ error: 'GitHub fetch failed' });
+    console.error('GitHub fetch failed:', err);
+    res.json(FALLBACK_GITHUB_DATA);
   }
 });
 

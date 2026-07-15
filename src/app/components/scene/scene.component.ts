@@ -98,6 +98,7 @@ export class SceneComponent implements OnInit, OnDestroy {
   projectsFound = false;
   expFound = false;
   eduFound = false;
+  gitStatsFound = false;
   contactFound = false;
 
   // Light references for theme transitions
@@ -122,6 +123,7 @@ export class SceneComponent implements OnInit, OnDestroy {
   private projectsEl: HTMLElement | null = null;
   private experienceEl: HTMLElement | null = null;
   private educationEl: HTMLElement | null = null;
+  private gitStatsEl: HTMLElement | null = null;
   private contactEl: HTMLElement | null = null;
 
   // Cache section placeholder elements for X coordination mapping
@@ -131,6 +133,7 @@ export class SceneComponent implements OnInit, OnDestroy {
   private projectsPlaceholder: HTMLElement | null = null;
   private experiencePlaceholder: HTMLElement | null = null;
   private educationPlaceholder: HTMLElement | null = null;
+  private gitStatsPlaceholder: HTMLElement | null = null;
   private contactPlaceholder: HTMLElement | null = null;
 
   // State definitions for desktop & mobile
@@ -141,6 +144,7 @@ export class SceneComponent implements OnInit, OnDestroy {
     projects: { x: -1.8, y: -0.02, z: 2.0, rx: -0.05, ry: 0.7, rz: -0.02, scale: 3.1, displacement: 0.0, opacity: 1.0 },
     experience: { x: 1.8, y: -0.02, z: 2.0, rx: 0.05, ry: -0.5, rz: 0.0, scale: 3.1, displacement: 0.0, opacity: 1.0 },
     education: { x: -1.8, y: -0.02, z: 2.0, rx: 0.05, ry: 0.5, rz: 0.0, scale: 3.1, displacement: 0.0, opacity: 1.0 },
+    gitStats: { x: 0.0, y: -0.10, z: 2.0, rx: 0.0, ry: 0.0, rz: 0.0, scale: 3.5, displacement: 0.0, opacity: 1.0 },
     contact: { x: -1.8, y: -0.02, z: 2.0, rx: 0.0, ry: 0.5, rz: 0.0, scale: 3.1, displacement: 0.0, opacity: 0.0 }
   };
 
@@ -151,6 +155,7 @@ export class SceneComponent implements OnInit, OnDestroy {
     projects: { x: 0.0, y: -0.95, z: 0.0, rx: 0, ry: 0.0, rz: 0, scale: 1.8, displacement: 0.0, opacity: 0.4 },
     experience: { x: 0.0, y: -0.95, z: 0.0, rx: 0, ry: 0, rz: 0, scale: 1.8, displacement: 0.0, opacity: 0.4 },
     education: { x: 0.0, y: -0.95, z: 0.0, rx: 0, ry: 0, rz: 0, scale: 1.8, displacement: 0.0, opacity: 0.4 },
+    gitStats: { x: 0.0, y: -0.95, z: 0.0, rx: 0, ry: 0, rz: 0, scale: 1.8, displacement: 0.0, opacity: 0.4 },
     contact: { x: 0.0, y: -0.95, z: 0.0, rx: 0, ry: 0, rz: 0, scale: 1.8, displacement: 0.0, opacity: 0.0 }
   };
 
@@ -170,6 +175,7 @@ export class SceneComponent implements OnInit, OnDestroy {
       this.projectsEl = document.getElementById('projects');
       this.experienceEl = document.getElementById('experience');
       this.educationEl = document.getElementById('education');
+      this.gitStatsEl = document.getElementById('git-stats');
       this.contactEl = document.querySelector('app-contact') || document.getElementById('contact');
 
       // Placeholders for X coordinates mapping
@@ -179,6 +185,7 @@ export class SceneComponent implements OnInit, OnDestroy {
       this.projectsPlaceholder = document.querySelector('#projects .projects-left-col');
       this.experiencePlaceholder = document.querySelector('#experience .experience-right-col');
       this.educationPlaceholder = document.querySelector('#education .education-left-col');
+      this.gitStatsPlaceholder = document.getElementById('git-stats-placeholder');
       this.contactPlaceholder = document.querySelector('#contact .contact-photo-frame');
     }, 800);
 
@@ -493,7 +500,7 @@ export class SceneComponent implements OnInit, OnDestroy {
   };
 
   private updateMaxScroll() {
-    this.maxScroll = window.innerHeight * 6;
+    this.maxScroll = window.innerHeight * 7;
   }
 
   @HostListener('document:mousemove', ['$event'])
@@ -536,7 +543,7 @@ export class SceneComponent implements OnInit, OnDestroy {
   private animate = () => {
     this.frameId = requestAnimationFrame(this.animate);
 
-    this.maxScroll = window.innerHeight * 6;
+    this.maxScroll = window.innerHeight * 7;
 
     // Get virtual scroll from ScrollService
     this.targetScrollY = this.scrollService.getVirtualScrollY();
@@ -679,7 +686,8 @@ export class SceneComponent implements OnInit, OnDestroy {
     const projectsTop = windowHeight * 3;
     const experienceTop = windowHeight * 4;
     const educationTop = windowHeight * 5;
-    const contactTop = windowHeight * 6;
+    const gitStatsTop = windowHeight * 6;
+    const contactTop = windowHeight * 7;
 
     const heroState = isMobile ? this.mobileStates.hero : {
       ...this.desktopStates.hero,
@@ -705,6 +713,10 @@ export class SceneComponent implements OnInit, OnDestroy {
       ...this.desktopStates.education,
       x: this.getXFromElement(this.educationPlaceholder, this.desktopStates.education.z, this.desktopStates.education.x)
     };
+    const gitStatsState = isMobile ? this.mobileStates.gitStats : {
+      ...this.desktopStates.gitStats,
+      x: this.getXFromElement(this.gitStatsPlaceholder, this.desktopStates.gitStats.z, this.desktopStates.gitStats.x)
+    };
     const contactState = isMobile ? this.mobileStates.contact : {
       ...this.desktopStates.contact,
       x: this.getXFromElement(this.contactPlaceholder, this.desktopStates.contact.z, this.desktopStates.contact.x)
@@ -717,6 +729,7 @@ export class SceneComponent implements OnInit, OnDestroy {
       { top: projectsTop, state: projectsState },
       { top: experienceTop, state: experienceState },
       { top: educationTop, state: educationState },
+      { top: gitStatsTop, state: gitStatsState },
       { top: contactTop, state: contactState }
     ];
 
@@ -779,6 +792,7 @@ export class SceneComponent implements OnInit, OnDestroy {
       this.projectsFound = !!this.projectsPlaceholder;
       this.expFound = !!this.experiencePlaceholder;
       this.eduFound = !!this.educationPlaceholder;
+      this.gitStatsFound = !!this.gitStatsPlaceholder;
       this.contactFound = !!this.contactPlaceholder;
 
       let activeName = 'none';
@@ -789,7 +803,8 @@ export class SceneComponent implements OnInit, OnDestroy {
               sections[i].top === skillsTop ? 'skills' :
                 sections[i].top === projectsTop ? 'projects' :
                   sections[i].top === experienceTop ? 'experience' :
-                    sections[i].top === educationTop ? 'education' : 'contact';
+                    sections[i].top === educationTop ? 'education' :
+                      sections[i].top === gitStatsTop ? 'gitStats' : 'contact';
           break;
         }
       }
@@ -854,7 +869,7 @@ export class SceneComponent implements OnInit, OnDestroy {
 
     const canvas = this.canvasRef.nativeElement;
     const activePage = this.scrollService.getActivePage();
-    if (activePage === 6 || target.opacity <= 0.01) {
+    if (activePage === 7 || target.opacity <= 0.01) {
       canvas.style.opacity = '0';
       canvas.style.zIndex = '-1';
     } else {

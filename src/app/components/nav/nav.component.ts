@@ -11,7 +11,7 @@ import gsap from 'gsap';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <nav data-testid="navigation" [class.contact-active]="activePageIndex === 6" #navContainer>
+    <nav data-testid="navigation" [class.contact-active]="activePageIndex === 7" #navContainer>
       <div class="nav-logo" (mousemove)="onMouseMoveLogo($event)" (mouseleave)="onMouseLeaveLogo()" #logoEl>SKD</div>
       
       <ul class="nav-links" (mouseleave)="onLinksMouseLeave()">
@@ -76,7 +76,8 @@ export class NavComponent implements OnInit, AfterViewInit, OnDestroy {
     { name: 'Skills', href: '#skills', page: 2 },
     { name: 'Projects', href: '#projects', page: 3 },
     { name: 'Experience', href: '#experience', page: 4, aliasPage: 5 },
-    { name: 'Contact', href: '#contact', page: 6 }
+    { name: 'Git Stats', href: '#git-stats', page: 6 },
+    { name: 'Contact', href: '#contact', page: 7 }
   ];
 
   @ViewChild('activeBubble', { static: true }) activeBubble!: ElementRef<HTMLDivElement>;
