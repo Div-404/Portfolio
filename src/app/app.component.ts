@@ -139,6 +139,8 @@ import { gsap } from 'gsap';
     <div class="global-orb orb-1" aria-hidden="true"></div>
     <div class="global-orb orb-2" aria-hidden="true"></div>
     <div class="global-orb orb-3" aria-hidden="true"></div>
+    <div class="global-orb orb-4" aria-hidden="true"></div>
+    <div class="global-orb orb-5" aria-hidden="true"></div>
 
     <div id="cursor-dot"></div>
     <div id="cursor-ring"></div>
@@ -367,6 +369,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   showPrompt = false;
   showBypass = false;
   gltfLoaded = false;
+  private mm?: any;
 
   logList: string[] = [];
   rawLogs = [
@@ -870,6 +873,41 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       this.ringYTo = gsap.quickTo(ring, "y", { duration: 0.25, ease: "power3.out" });
     }
 
+    // Initialize GSAP breathing animation for global background orbs
+    const orbs = [
+      { sel: '.global-orb.orb-1', x: '4vw', y: '-3vh', scale: 1.15, rot: 60, dur: 18 },
+      { sel: '.global-orb.orb-2', x: '-3vw', y: '4vh', scale: 0.9, rot: -45, dur: 22 },
+      { sel: '.global-orb.orb-3', x: '5vw', y: '2vh', scale: 1.1, rot: 30, dur: 20 },
+      { sel: '.global-orb.orb-4', x: '-2vw', y: '-4vh', scale: 0.95, rot: -60, dur: 24 },
+      { sel: '.global-orb.orb-5', x: '3vw', y: '3vh', scale: 1.05, rot: 45, dur: 21 }
+    ];
+
+    this.mm = gsap.matchMedia();
+    this.mm.add(
+      {
+        reduceMotion: "(prefers-reduced-motion: reduce)",
+        animate: "(prefers-reduced-motion: no-preference)"
+      },
+      (context: any) => {
+        const { reduceMotion } = context.conditions;
+        if (!reduceMotion) {
+          orbs.forEach(orb => {
+            gsap.to(orb.sel, {
+              x: `+=${orb.x}`,
+              y: `+=${orb.y}`,
+              scale: orb.scale,
+              rotation: orb.rot,
+              duration: orb.dur,
+              repeat: -1,
+              yoyo: true,
+              ease: 'sine.inOut',
+              overwrite: 'auto'
+            });
+          });
+        }
+      }
+    );
+
     // Set initial state for Hero slide to hidden and trigger animation
     const heroSlide = document.querySelectorAll('.carousel-slide')[0] as HTMLElement;
     if (heroSlide) {
@@ -892,6 +930,9 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     window.removeEventListener('touchend', this.onTouchEnd);
     if (this.currentScrollTween) {
       this.currentScrollTween.kill();
+    }
+    if (this.mm) {
+      this.mm.revert();
     }
   }
 
